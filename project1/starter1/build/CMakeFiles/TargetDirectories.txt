@@ -1,0 +1,11 @@
+/media/sf_Learn/Computer Graphics/project1/starter1/build/CMakeFiles/a1.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/CMakeFiles/rebuild_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/glfw/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/glfw/CMakeFiles/rebuild_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/glfw/src/CMakeFiles/glfw.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/glfw/src/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/glfw/src/CMakeFiles/rebuild_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/vecmath/CMakeFiles/vecmath.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/vecmath/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project1/starter1/build/vecmath/CMakeFiles/rebuild_cache.dir

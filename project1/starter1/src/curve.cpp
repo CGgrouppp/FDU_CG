@@ -43,6 +43,54 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 	// Also note that you may assume that all Bezier curves that you
 	// receive have G1 continuity.  Otherwise, the TNB will not be
 	// be defined at points where this does not hold.
+	
+	int P_size = P.size();
+	int segments = P_size/3;
+	float t,delta;
+	delta = 1.0/steps;
+	t = 0;
+	Curve curves;
+	Matrix4f M_bez={1,-3,3,-1,
+								0,3,-6,3,
+								0,0,3,-3,
+								00,0,0,1};
+	Vector3f B0={0,0,1};
+	Vector4f MT;
+	Vector4f MT_dao;
+	
+	for(int i=0;i<segments;i++)
+	{
+		t = 0;
+		Vector3f P1,P2,P3,P4;
+		P1 = P[i*3];
+		P2 = P[i*3+1];
+		P3 = P[i*3+2];
+		P4 = P[i*3+3];
+		
+		if(i == 0)
+		{
+			CurvePoint C;
+			C.V = P1;
+			C.T =(3* (P2-P1)).normalized();
+			C.N = Vector3f::cross(B0,C.T).normalized();
+			C.B = Vector3f::cross(C.T,C.N).normalized();
+			curves.push_back(C);
+		}
+		for(unsigned j=0;j<steps;j++)
+		{
+			t+=delta;
+			CurvePoint NewC;
+			Vector4f T(1,t,t*t,t*t*t);
+			Vector4f T_dao(0,1,2*t,3*t*t);
+			MT=M_bez*T;
+			MT_dao=M_bez*T_dao;
+			NewC.V = P1*MT.x()+P2*MT.y()+P3*MT.z()+P4*MT.w();
+			NewC.T = (P1*MT_dao.x()+P2*MT_dao.y()+P3*MT_dao.z()+P4*MT_dao.w()).normalized();
+			NewC.N = (curves.back().B*NewC.T).normalized();
+			NewC.B = (NewC.T*NewC.N).normalized();
+			curves.push_back(NewC);
+		}
+	}
 
 	cerr << "\t>>> evalBezier has been called with the following input:" << endl;
 
@@ -56,7 +104,7 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 	cerr << "\t>>> Returning empty curve." << endl;
 
 	// Right now this will just return this empty curve.
-	return Curve();
+	return curves;
 }
 
 Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
