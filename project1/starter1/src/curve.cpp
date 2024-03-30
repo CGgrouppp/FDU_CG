@@ -121,6 +121,34 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 	// basis from B-spline to Bezier.  That way, you can just call
 	// your evalBezier function.
 
+	int P_size=P.size();
+	Matrix4f M_B(1.0/6, -1.0/2, 1.0/2, -1.0/6,
+							2.0/3, 0, -1.0, 1.0/2,
+							1.0/6, 1.0/2, 1.0/2, -1.0/2,
+							0, 0, 0, 1.0/6);
+	Matrix4f M_bez={1,-3,3,-1,
+								0,3,-6,3,
+								0,0,3,-3,
+								00,0,0,1};
+	Matrix4f Multi=M_B*(M_bez.inverse());
+	vector<Vector3f> P_trans;
+	for(int i=3;i<P_size;i++)
+	{
+		Matrix4f temp(Vector4f(P[i-3],0),
+								 Vector4f(P[i-2],0),
+								 Vector4f(P[i-1],0),
+								 Vector4f(P[i],0)); //构造4*4矩阵，方便相乘
+		Matrix4f P_trans_raw=temp*Multi; //得到新的点，但是w轴多余，只取xyz
+		if(i==3)
+		{
+			P_trans.push_back(P_trans_raw.getCol(0).xyz());
+		}
+		P_trans.push_back(P_trans_raw.getCol(1).xyz());
+		P_trans.push_back(P_trans_raw.getCol(2).xyz());
+		P_trans.push_back(P_trans_raw.getCol(3).xyz());
+	}
+	vector<CurvePoint> curves=evalBezier(P_trans,steps);
+
 	cerr << "\t>>> evalBSpline has been called with the following input:" << endl;
 
 	cerr << "\t>>> Control points (type vector< Vector3f >): " << endl;
@@ -133,7 +161,7 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 	cerr << "\t>>> Returning empty curve." << endl;
 
 	// Return an empty curve right now.
-	return Curve();
+	return curves;
 }
 
 Curve evalCircle(float radius, unsigned steps)
