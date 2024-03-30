@@ -86,8 +86,8 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 			MT_dao=M_bez*T_dao;
 			NewC.V = P1*MT.x()+P2*MT.y()+P3*MT.z()+P4*MT.w();
 			NewC.T = (P1*MT_dao.x()+P2*MT_dao.y()+P3*MT_dao.z()+P4*MT_dao.w()).normalized();
-			NewC.N = (curves.back().B*NewC.T).normalized();
-			NewC.B = (NewC.T*NewC.N).normalized();
+			NewC.N = Vector3f::cross(curves.back().B,NewC.T).normalized();
+			NewC.B = Vector3f::cross(NewC.T,NewC.N).normalized();
 			curves.push_back(NewC);
 		}
 	}
