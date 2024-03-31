@@ -37,11 +37,14 @@ Surface quad() {
 	return ret;
 }
 
+const double pi = 3.14159265358979323846;
+
 Surface makeSurfRev(const Curve &profile, unsigned steps)
 {
     Surface surface;
-	surface = quad();
-    
+	//surface = quad();
+    unsigned lenth = profile.size();
+
     if (!checkFlat(profile))
     {
         cerr << "surfRev profile curve must be flat on xy plane." << endl;
@@ -49,6 +52,24 @@ Surface makeSurfRev(const Curve &profile, unsigned steps)
     }
 
     // TODO: Here you should build the surface.  See surf.h for details.
+    // 旋转曲面
+    for(unsigned i = 0; i < steps; i++){
+        double theta = 2*pi/steps*i;
+        Matrix4f M = Matrix4f::rotateY(theta);
+        Matrix4f M_inverse_T = M.inverse().transposed();
+        for(unsigned j = 0; j <lenth; j++){
+            Vector4f P = Vector4f(profile[j].V, 1);
+            Vector4f N = Vector4f(profile[j].N, 1);
+            surface.VV.push_back((M*P).xyz());
+            surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
+        }
+        for(unsigned k = 0; k<lenth; k++){
+            // 构成三角形
+            unsigned temp = (i+1)%(steps);
+            surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
+            surface.VF.push_back(Tup3u(i*lenth+k+1, temp*lenth+k+1, temp*lenth+k));
+        }
+    }
 
     cerr << "\t>>> makeSurfRev called (but not implemented).\n\t>>> Returning empty surface." << endl;
  
@@ -58,7 +79,7 @@ Surface makeSurfRev(const Curve &profile, unsigned steps)
 Surface makeGenCyl(const Curve &profile, const Curve &sweep )
 {
     Surface surface;
-	surface = quad();
+	//surface = quad();
 
     if (!checkFlat(profile))
     {
@@ -67,7 +88,37 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
     }
 
     // TODO: Here you should build the surface.  See surf.h for details.
-
+    // 广义圆柱体
+    unsigned lenth = profile.size();
+    unsigned steps = sweep.size();
+    for(unsigned i = 0; i < steps; i++){
+        Vector4f N = Vector4f(sweep[i].N, 0);
+        Vector4f B = Vector4f(sweep[i].B, 0);
+        Vector4f T = Vector4f(sweep[i].T, 0);
+        Vector4f V = Vector4f(sweep[i].V, 1);
+        Matrix4f M = Matrix4f(N, B, T, V, true);
+        Matrix4f M_inverse_T = M.inverse().transposed();
+        for(unsigned j = 0; j < lenth; j++){
+            Vector4f P = Vector4f(profile[j].V, 1);
+            Vector4f N = Vector4f(profile[j].N, 1);
+            surface.VV.push_back((M*P).xyz());
+            surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
+        }
+        // if(i != steps-1){
+        //     for(unsigned k = 0; k<lenth-1; k++){
+        //         // 构成三角形
+        //         surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, (i+1)*lenth+k));
+        //         surface.VF.push_back(Tup3u(i*lenth+k+1, (i+1)*lenth+k+1, (i+1)*lenth+k));
+        //     }
+        // }
+        for(unsigned k = 0; k<lenth; k++){
+            // 构成三角形
+            unsigned temp = (i+1)%(steps);
+            surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
+            surface.VF.push_back(Tup3u(i*lenth+k+1, temp*lenth+k+1, temp*lenth+k));
+        }
+    }
+    
     cerr << "\t>>> makeGenCyl called (but not implemented).\n\t>>> Returning empty surface." <<endl;
 
     return surface;

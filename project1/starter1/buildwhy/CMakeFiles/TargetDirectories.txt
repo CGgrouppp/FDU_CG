@@ -1,0 +1,11 @@
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/CMakeFiles/a1.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/CMakeFiles/rebuild_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/glfw/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/glfw/CMakeFiles/rebuild_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/glfw/src/CMakeFiles/glfw.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/glfw/src/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/glfw/src/CMakeFiles/rebuild_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/vecmath/CMakeFiles/vecmath.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/vecmath/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project1/starter1/buildwhy/vecmath/CMakeFiles/rebuild_cache.dir
