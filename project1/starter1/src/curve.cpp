@@ -53,7 +53,7 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 	Matrix4f M_bez={1,-3,3,-1,
 								0,3,-6,3,
 								0,0,3,-3,
-								00,0,0,1};
+								0,0,0,1};
 	Vector3f B0={0,0,1};
 	Vector4f MT;
 	Vector4f MT_dao;
@@ -129,7 +129,7 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 	Matrix4f M_bez={1,-3,3,-1,
 								0,3,-6,3,
 								0,0,3,-3,
-								00,0,0,1};
+								0,0,0,1};
 	Matrix4f Multi=M_B*(M_bez.inverse());
 	vector<Vector3f> P_trans;
 	for(int i=3;i<P_size;i++)
