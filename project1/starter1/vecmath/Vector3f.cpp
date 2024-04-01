@@ -21,6 +21,8 @@ const Vector3f Vector3f::RIGHT = Vector3f( 1, 0, 0 );
 // static
 const Vector3f Vector3f::FORWARD = Vector3f( 0, 0, -1 );
 
+double const eps=1.0e-6;
+
 Vector3f::Vector3f( float f )
 {
     m_elements[0] = f;
@@ -321,7 +323,7 @@ Vector3f operator / ( const Vector3f& v, float f )
 
 bool operator == ( const Vector3f& v0, const Vector3f& v1 )
 {
-    return( v0.x() == v1.x() && v0.y() == v1.y() && v0.z() == v1.z() );
+    return( fabs(v0.x() - v1.x())<=eps && fabs(v0.y() -v1.y())<=eps && fabs(v0.z() - v1.z())<=eps );
 }
 
 bool operator != ( const Vector3f& v0, const Vector3f& v1 )

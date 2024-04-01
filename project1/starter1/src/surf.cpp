@@ -76,6 +76,16 @@ Surface makeSurfRev(const Curve &profile, unsigned steps)
     return surface;
 }
 
+bool CheckWeird(const Curve& sweep)
+{
+    unsigned sweep_size=sweep.size();
+    double const eps=1.0e-6;
+    if((sweep[0].T == sweep[sweep_size-1].T) && (sweep[0].V==sweep[sweep_size-1].V) 
+            && (sweep[0].N != sweep[sweep_size-1].N))
+        return false;//不闭合返回false
+    return true;
+}
+
 Surface makeGenCyl(const Curve &profile, const Curve &sweep )
 {
     Surface surface;
@@ -91,11 +101,34 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
     // 广义圆柱体
     unsigned lenth = profile.size();
     unsigned steps = sweep.size();
+    //插值旋转
+    Quat4f P0=Quat4f::IDENTITY;
+    Quat4f P1=Quat4f::IDENTITY;
+    if(!CheckWeird(sweep))
+    {
+        float theta = -acos(Vector3f::dot(sweep[0].N,sweep[steps-1].N));
+        P1.setAxisAngle(theta,sweep[0].T);
+        
+    }
+    Curve sweep_trans;
+    float t=0,delta=1.0/steps;
+    for(unsigned i=0;i<steps;i++)
+    {
+        CurvePoint point;
+        Quat4f Slerp = Quat4f::slerp(P0,P1,t).normalized();
+        point.V = sweep[i].V;
+        point.N = (Slerp*Quat4f(sweep[i].N)*Slerp.inverse()).xyz(); //利用四元数进行插值旋转
+        point.B = (Slerp*Quat4f(sweep[i].B)*Slerp.inverse()).xyz();
+        point.T = (Slerp*Quat4f(sweep[i].T)*Slerp.inverse()).xyz();
+        sweep_trans.push_back(point);
+        t+=delta;
+
+    }
     for(unsigned i = 0; i < steps; i++){
-        Vector4f N = Vector4f(sweep[i].N, 0);
-        Vector4f B = Vector4f(sweep[i].B, 0);
-        Vector4f T = Vector4f(sweep[i].T, 0);
-        Vector4f V = Vector4f(sweep[i].V, 1);
+        Vector4f N = Vector4f(sweep_trans[i].N, 0);
+        Vector4f B = Vector4f(sweep_trans[i].B, 0);
+        Vector4f T = Vector4f(sweep_trans[i].T, 0);
+        Vector4f V = Vector4f(sweep_trans[i].V, 1);
         Matrix4f M = Matrix4f(N, B, T, V, true);
         Matrix4f M_inverse_T = M.inverse().transposed();
         for(unsigned j = 0; j < lenth; j++){
@@ -104,13 +137,7 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
             surface.VV.push_back((M*P).xyz());
             surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
         }
-        // if(i != steps-1){
-        //     for(unsigned k = 0; k<lenth-1; k++){
-        //         // 构成三角形
-        //         surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, (i+1)*lenth+k));
-        //         surface.VF.push_back(Tup3u(i*lenth+k+1, (i+1)*lenth+k+1, (i+1)*lenth+k));
-        //     }
-        // }
+
         for(unsigned k = 0; k<lenth; k++){
             // 构成三角形
             unsigned temp = (i+1)%(steps);

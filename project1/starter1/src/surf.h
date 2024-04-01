@@ -38,6 +38,7 @@ Surface makeGenCyl( const Curve& profile,
 
 void outputObjFile( std::ostream& out, const Surface& surface );
 
+bool CheckWeird(const Curve& );
 
 
 
