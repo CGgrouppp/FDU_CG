@@ -63,7 +63,7 @@ Surface makeSurfRev(const Curve &profile, unsigned steps)
             surface.VV.push_back((M*P).xyz());
             surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
         }
-        for(unsigned k = 0; k<lenth; k++){
+        for(unsigned k = 0; k<lenth-1; k++){
             // 构成三角形
             unsigned temp = (i+1)%(steps);
             surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
@@ -138,7 +138,7 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
             surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
         }
 
-        for(unsigned k = 0; k<lenth; k++){
+        for(unsigned k = 0; k<lenth-1; k++){
             // 构成三角形
             unsigned temp = (i+1)%(steps);
             surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));

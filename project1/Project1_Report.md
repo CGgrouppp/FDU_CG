@@ -20,7 +20,7 @@ $B_i=(T_i*N_i).normalize()$
 - 每一组点的计算中，t从0开始，每次增加$δ=\frac{1.0}{steps}$，计算出每个点的坐标，并根据公式计算出局部坐标系B,T,N。直接调用矩阵的对应函数和矩阵乘法，<strong>注意向量不能直接进行相乘，而是要调用Vector3f的对应cross函数</strong>
 - 对于第一个点进行初始化处理，第一个点为P1，切向量T为t=0代入P’(t)，得到3*(P2-P1),B0取(0,0,1)，后续循环每一段计算steps个点即可。
 - 使用curves对CurvePoint进行存储，在计算出每个CurvePoint的对应信息后将其push进curves最后返回
-```
+```c
 Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 {
 	// Check
@@ -112,7 +112,7 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 - 为了方便计算，将$[P_{j-3},P_{j-2},P_{j-1},P_{j}]$拓展为4*4的矩阵，并在之后通过getCol(0).xyz()函数获取实际变换后的三维坐标
 - 最后调用evalBezier函数，将变换后的点集传入求解
 
-```
+```c
 Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 {
 	// Check
@@ -184,3 +184,234 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 - wineglass.swp
 ![alt text](a0926fe0903470be54f299645056caf.png)
 
+## 二、曲面的绘制
+### 1.旋转曲面
+#### 实验要求
+完成`surf.cpp`中的`makeSurfRev`函数，正确地计算曲面法线，实现两种显示模式，一种显示以线框模式绘制的曲面，并将顶点法线从曲面向外绘制，另一种使用平滑的阴影来显示表面。
+#### 实验原理
+（1）旋转曲面是将xy平面上的轮廓曲线绕y轴旋转形成的曲面，通过旋转变换计算出曲线上各控制点旋转一定角度后对应的坐标。
+绕y轴的旋转变换矩阵为
+$R_y(\theta)=
+\begin{bmatrix}
+    cos\theta & 0 & sin\theta & 0 \\
+    0 & 1 & 0 & 0 \\
+    -sin\theta & 0 & cos\theta & 0 \\
+    0 & 0 & 0 & 1 \\
+\end{bmatrix}
+$
+控制点坐标为$P' = M*P$
+（2）可以通过$N' = normalize((M^{-1})^T*N)$获得法线，为了使OpenGL执行适当的照明计算，法线需要从表面射出，在这个任务下，要反转曲线法线的方向得到正确的曲面法线，即$N' = normalize(-(M^{-1})^T*N)$。
+（3）最后，在相邻曲线之间构造三角形来形成曲面。如下图，对于相邻两条曲线的四个顶点A、B、C、D，构成ACB和BCD两个三角形。注意，因为曲线是逆时针旋转，为了显示出正确的照明结果，三角形也要按照逆时针的顺序生成。
+![alt text](tangle.png)
+
+#### 代码解读
+- 根据step决定每次旋转的角度$2*π/steps*i$，直接调用`Matrix4f::rotateY`函数得到不同角度对应的旋转矩阵`M`，并通过计算逆矩阵转置得到后续需要使用的矩阵`M_inverse_T`。
+- 遍历曲线`profile`上的点，使用前一步的选择矩阵将旋转变换过的点的坐标和点的法向量分别加入到曲面顶点和法向量的数组中。 
+- 当前曲线和下一条曲线上的顶点构成三角形面片来形成曲面，根据前面的实验原理使用`Tup3u`函数将三角形的顶点索引加入到曲面的面数组中。同时，为了让最后一条曲线和第一条曲线构成面，加入了`unsigned temp = (i+1)%(steps)`。这里还需要考虑到轮廓曲线不一定是闭合曲线，不需要将首尾连接起来，在遍历轮廓曲线控制点到`lenth-2`下标就可以停止了。
+```c
+const double pi = 3.14159265358979323846;
+Surface makeSurfRev(const Curve &profile, unsigned steps)
+{
+    Surface surface;
+	//surface = quad();
+    unsigned lenth = profile.size();
+
+    if (!checkFlat(profile))
+    {
+        cerr << "surfRev profile curve must be flat on xy plane." << endl;
+        exit(0);
+    }
+
+    // TODO: Here you should build the surface.  See surf.h for details.
+    // 旋转曲面
+    for(unsigned i = 0; i < steps; i++){
+        double theta = 2*pi/steps*i;
+        Matrix4f M = Matrix4f::rotateY(theta);
+        Matrix4f M_inverse_T = M.inverse().transposed();
+        for(unsigned j = 0; j <lenth; j++){
+            Vector4f P = Vector4f(profile[j].V, 1);
+            Vector4f N = Vector4f(profile[j].N, 1);
+            surface.VV.push_back((M*P).xyz());
+            surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
+        }
+        for(unsigned k = 0; k<lenth-1; k++){
+            // 构成三角形
+            unsigned temp = (i+1)%(steps);
+            surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
+            surface.VF.push_back(Tup3u(i*lenth+k+1, temp*lenth+k+1, temp*lenth+k));
+        }
+    }
+
+    cerr << "\t>>> makeSurfRev called (but not implemented).\n\t>>> Returning empty surface." << endl;
+ 
+    return surface;
+}
+```
+### 2.广义圆柱面
+#### 实验要求
+完成`surf.cpp`中的`makeGenCyl`函数，正确地计算曲面法线，实现两种显示模式，一种显示以线框模式绘制的曲面，并将顶点法线从曲面向外绘制，另一种使用平滑的阴影来显示表面。
+#### 实验原理
+（1）广义圆柱体是通过沿着一个曲线轮廓（profile）进行扫掠（sweep）而生成的，轮廓曲线沿着三维扫描曲线的路径，获得一个三维形状。扫描曲线上的任意一个点对应一个坐标系， 我们需要将轮廓曲线变换到这个坐标系上，变换矩阵为
+$M=
+\begin{bmatrix}
+    N & B & T & V \\
+    0 & 0 & 0 & 1 \\
+\end{bmatrix}
+$
+控制点坐标为`P = M*P`
+（2）曲面法线同旋转曲面，也要对结果取负得到正确的结果：$N' = normalize((M^{-1})^T*N)$
+（3）按照和旋转曲面一样的方法构造三角形
+#### 代码解读
+- 遍历扫描曲线（sweep）上的每一点，计算出每一点对应的变换矩阵。
+- 遍历轮廓曲线（profile）上的每一点，计算出该点进行变换后对应的坐标和法向量，加入到曲面的顶点和法向量数组中。
+- 构造三角形面片，加入到曲面的面数组中。
+```c
+Surface makeGenCyl(const Curve &profile, const Curve &sweep )
+{
+    Surface surface;
+	//surface = quad();
+
+    if (!checkFlat(profile))
+    {
+        cerr << "genCyl profile curve must be flat on xy plane." << endl;
+        exit(0);
+    }
+	unsigned lenth = profile.size();
+    unsigned steps = sweep.size();
+	for(unsigned i = 0; i < steps; i++){
+        Vector4f N = Vector4f(sweep[i].N, 0);
+        Vector4f B = Vector4f(sweep[i].B, 0);
+        Vector4f T = Vector4f(sweep[i].T, 0);
+        Vector4f V = Vector4f(sweep[i].V, 1);
+        Matrix4f M = Matrix4f(N, B, T, V, true);
+        Matrix4f M_inverse_T = M.inverse().transposed();
+        for(unsigned j = 0; j < lenth; j++){
+            Vector4f P = Vector4f(profile[j].V, 1);
+            Vector4f N = Vector4f(profile[j].N, 1);
+            surface.VV.push_back((M*P).xyz());
+            surface.VN.push_back((-(M_inverse_T*N).normalized()).xyz());
+        }
+
+        for(unsigned k = 0; k<lenth-1; k++){
+            // 构成三角形
+            unsigned temp = (i+1)%(steps);
+            surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
+            surface.VF.push_back(Tup3u(i*lenth+k+1, temp*lenth+k+1, temp*lenth+k));
+        }
+    }
+    cerr << "\t>>> makeGenCyl called (but not implemented).\n\t>>> Returning empty surface." <<endl;
+
+    return surface;
+}
+```
+### 3.实验结果
+flircle.swp
+<img src="part2_pic/fli1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/fli2.png" style="float:left; margin-right:10px;"/>
+florus.swp
+<img src="part2_pic/flo1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/flo2.png" style="float:left; margin-right:10px;"/>
+gentorus.swp
+<img src="part2_pic/gel1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/gel2.png" style="float:left; margin-right:10px;"/>
+norm.swp
+<img src="part2_pic/norm1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/norm2.png" style="float:left; margin-right:10px;"/>
+tor.swp
+<img src="part2_pic/tor1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/tor2.png" style="float:left; margin-right:10px;"/>
+weird.swp
+<img src="part2_pic/we1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/we2.png" style="float:left; margin-right:10px;"/>
+weirder.swp
+<img src="part2_pic/we3.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/we4.png" style="float:left; margin-right:10px;"/>
+winglass.swp
+<img src="part2_pic/gl1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/gl2.png" style="float:left; margin-right:10px;"/>
+## 三、曲面的闭合问题
+### 实验要求
+通过以上方法计算坐标系会存在闭合曲线在曲线相交的地方不一定对齐，因为生成的扫掠曲线来自B样条曲线的生成，如下图所示，在曲线首尾连接处，B、N两个向量不一致。
+![alt text](problem.jpg)
+通过添加代码来解决这个问题，显示一个无缝的weirder.swp。
+### 实验原理
+(1)可以得到曲线起始法向量与结束法向量的夹⻆$\alpha$，如果直接在起点和终点发生改变，有可能发生很大的错位，于是考虑制造一个渐变的过程，法向量在曲线闭合的两端缓慢地从起点过渡到终点向量。
+(2)通过插值旋转来实现。
+四元数的插值的定义为：假设有两个旋转变换 $q_0=[cos\theta_0, u_0sin\theta_0]$ 和 $q_1=[cos\theta_1, u_1sin\theta_1]$，我们希望找出中间变换 $q_t,t\in[0,1]$，使得初始变换 $q_0$ 能平滑的过渡到最终变换 $q_1$，$t=0$ 时 $q_t = q_0$，$t=1$ 时 $q_t = q_1$。
+这里采用Slerp插值法，对于两个单位四元数 $q_0$ 和 $q_1$，它们之间的插值可以表示为：
+$$
+Slerp(q_0, q_1, t) = \frac{{\sin((1 - t) \theta)}}{{\sin \theta}} q_0 + \frac{{\sin(t \theta)}}{{\sin \theta}} q_1
+$$
+
+其中，$\theta$ 是 $q_0$ 到 $q_1$ 之间的夹角，$t$ 是插值参数，$t\in[0, 1]$。
+插值过程如下：
+* 首先，计算两个四元数之间的夹角 $\theta$。
+* 根据插值参数 $t$ 计算插值系数。
+* 根据插值系数计算插值结果。
+### 代码解读
+- 首先，要写一个检查函数来判断起点和终点是否位置和切线相同，并且法线不同。因为三维向量中的值是float，使用原来的`==`无法正确判断向量是否相等，于是我们修改了`Vector3f.cpp`中的`==`函数，只要两个向量对应位置的差值小于1.0e-6，我们就认为两个向量是相等的。
+- 当`checkFlat(profile)==false`时，表示起点和终点的法线不同，要进行旋转。
+- 计算出起始点和终点法向量之间的夹角的负值。
+- 通过`P1.setAxisAngle(theta, sweep[0].T)`计算旋转的四元数P1
+- 通过循环进行插值旋转。使用插值参数`t`和增量`delta`进行插值。在每个循环中，通过四元数Slerp插值法计算在起始点和终点之间的旋转四元数。通过将每个曲线点的法向量、切向量和边界向量与插值得到的旋转四元数相乘，实现插值旋转,将旋转后的曲线点添加到`sweep_trans`曲线中。
+```c
+// 修改了Vector3f.cpp的==
+bool operator == ( const Vector3f& v0, const Vector3f& v1 )
+{
+    return( fabs(v0.x() - v1.x())<=eps && fabs(v0.y() -v1.y())<=eps && fabs(v0.z() - v1.z())<=eps );
+}
+// 检查函数
+bool CheckWeird(const Curve& sweep)
+{
+    unsigned sweep_size=sweep.size();
+    double const eps=1.0e-6;
+    if((sweep[0].T == sweep[sweep_size-1].T) && (sweep[0].V==sweep[sweep_size-1].V) 
+            && (sweep[0].N != sweep[sweep_size-1].N))
+        return false;//不闭合返回false
+    return true;
+}
+Surface makeGenCyl(const Curve &profile, const Curve &sweep )
+{
+    Surface surface;
+	//surface = quad();
+    if (!checkFlat(profile))
+    {
+        cerr << "genCyl profile curve must be flat on xy plane." << endl;
+        exit(0);
+    }
+    unsigned lenth = profile.size();
+    unsigned steps = sweep.size();
+    //插值旋转
+    Quat4f P0=Quat4f::IDENTITY;
+    Quat4f P1=Quat4f::IDENTITY;
+    if(!CheckWeird(sweep))
+    {
+        float theta = -acos(Vector3f::dot(sweep[0].N,sweep[steps-1].N));
+        P1.setAxisAngle(theta,sweep[0].T);
+        
+    }
+    Curve sweep_trans;
+    float t=0,delta=1.0/steps;
+    for(unsigned i=0;i<steps;i++)
+    {
+        CurvePoint point;
+        Quat4f Slerp = Quat4f::slerp(P0,P1,t).normalized();
+        point.V = sweep[i].V;
+        point.N = (Slerp*Quat4f(sweep[i].N)*Slerp.inverse()).xyz(); //利用四元数进行插值旋转
+        point.B = (Slerp*Quat4f(sweep[i].B)*Slerp.inverse()).xyz();
+        point.T = (Slerp*Quat4f(sweep[i].T)*Slerp.inverse()).xyz();
+        sweep_trans.push_back(point);
+        t+=delta;
+
+    }
+    //生成广义圆柱面
+    
+    cerr << "\t>>> makeGenCyl called (but not implemented).\n\t>>> Returning empty surface." <<endl;
+
+    return surface;
+}
+```
+### 实验结果
+weirder.swp
+<img src="part2_pic/ne1.png" style="float:left; margin-right:10px;"/>
+<img src="part2_pic/ne2.png" style="float:left; margin-right:10px;"/>
