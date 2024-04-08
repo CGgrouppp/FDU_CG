@@ -166,23 +166,32 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 ```
 ### 3. 实验结果
 - core.swp
-![alt text](087fc9957f461ea30b13d9ead531823.png)
+<div><img src="087fc9957f461ea30b13d9ead531823.png" height="200"/></div>
+
 - flircle.swp
-![alt text](2f6a8382800a109b0e83bc220b3bf00.png)
+<div><img src="2f6a8382800a109b0e83bc220b3bf00.png" height="200"/></div>
+
 - florus.swp
-![alt text](cf234fb8b65bbf54db12c3c9bdb2208.png)
+<div><img src="cf234fb8b65bbf54db12c3c9bdb2208.png" height="200"/></div>
+
 - gentorus.swp
-![alt text](fe737e90c76e4966bc0c91a9be34f1b.png)
+<div><img src="fe737e90c76e4966bc0c91a9be34f1b.png" height="200"/></div>
+
 - norm.swp
-![alt text](f8a8d757d62ca74157e542d1be34403.png)
+<div><img src="f8a8d757d62ca74157e542d1be34403.png" height="200"/></div>
+
 - tor.swp
-![alt text](7430d51da9499fd6d73b809c97d9e16.png)
+<div><img src="7430d51da9499fd6d73b809c97d9e16.png" height="200"/></div>
+
 - weird.swp
-![alt text](9cfc55a38d979bb7a2fff154c69aa42.png)
+<div><img src="9cfc55a38d979bb7a2fff154c69aa42.png" height="200"/></div>
+
 - weirder.swp
-![alt text](28a17c3fc18f39742d43974aa510d06.png)
+<div><img src="28a17c3fc18f39742d43974aa510d06.png" height="200"/></div>
+
 - wineglass.swp
-![alt text](a0926fe0903470be54f299645056caf.png)
+<div><img src="a0926fe0903470be54f299645056caf.png" height="200"/></div>
+
 
 ## 二、曲面的绘制
 ### 1.旋转曲面
@@ -202,7 +211,7 @@ $
 控制点坐标为$P' = M*P$
 （2）可以通过$N' = normalize((M^{-1})^T*N)$获得法线，为了使OpenGL执行适当的照明计算，法线需要从表面射出，在这个任务下，要反转曲线法线的方向得到正确的曲面法线，即$N' = normalize(-(M^{-1})^T*N)$。
 （3）最后，在相邻曲线之间构造三角形来形成曲面。如下图，对于相邻两条曲线的四个顶点A、B、C、D，构成ACB和BCD两个三角形。注意，因为曲线是逆时针旋转，为了显示出正确的照明结果，三角形也要按照逆时针的顺序生成。
-![alt text](tangle.png)
+<img src="tangle.png" height = "200"/>
 
 #### 代码解读
 - 根据step决定每次旋转的角度$2*π/steps*i$，直接调用`Matrix4f::rotateY`函数得到不同角度对应的旋转矩阵`M`，并通过计算逆矩阵转置得到后续需要使用的矩阵`M_inverse_T`。
@@ -306,33 +315,84 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
 ```
 ### 3.实验结果
 flircle.swp
-<img src="part2_pic/fli1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/fli2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/fli1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/fli2.png" height="200" />
+    </div>
+</div>
 florus.swp
-<img src="part2_pic/flo1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/flo2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/flo1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/flo2.png" height="200" />
+    </div>
+</div>
 gentorus.swp
-<img src="part2_pic/gel1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/gel2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/gel1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/gel2.png" height="200" />
+    </div>
+</div>
 norm.swp
-<img src="part2_pic/norm1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/norm2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/norm1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/norm2.png" height="200" />
+    </div>
+</div>
 tor.swp
-<img src="part2_pic/tor1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/tor2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/tor1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/tor2.png" height="200" />
+    </div>
+</div>
 weird.swp
-<img src="part2_pic/we1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/we2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/we1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/we2.png" height="200" />
+    </div>
+</div>
 weirder.swp
-<img src="part2_pic/we3.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/we4.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/we3.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/we4.png" height="200" />
+    </div>
+</div>
 winglass.swp
-<img src="part2_pic/gl1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/gl2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/gl1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/gl2.png" height="200" />
+    </div>
+</div>
+
 ## 三、曲面的闭合问题
 ### 实验要求
 通过以上方法计算坐标系会存在闭合曲线在曲线相交的地方不一定对齐，因为生成的扫掠曲线来自B样条曲线的生成，如下图所示，在曲线首尾连接处，B、N两个向量不一致。
-![alt text](problem.jpg)
+
+<div ><img src="problem.jpg" height = "200"/></div>
+
 通过添加代码来解决这个问题，显示一个无缝的weirder.swp。
 ### 实验原理
 (1)可以得到曲线起始法向量与结束法向量的夹⻆$\alpha$，如果直接在起点和终点发生改变，有可能发生很大的错位，于是考虑制造一个渐变的过程，法向量在曲线闭合的两端缓慢地从起点过渡到终点向量。
@@ -413,5 +473,31 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
 ```
 ### 实验结果
 weirder.swp
-<img src="part2_pic/ne1.png" style="float:left; margin-right:10px;"/>
-<img src="part2_pic/ne2.png" style="float:left; margin-right:10px;"/>
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="part2_pic/ne1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="part2_pic/ne2.png" height="200" />
+    </div>
+</div>
+
+## 四、遇到的问题
+### 1.构造三角形面片
+在遍历轮廓线上的点时，`k<lenth-2`会导致生成结果少一条线，如左图；如果设置`k<lenth`，因为轮廓曲线不一定是封闭的，这样设置会导致多出一个面。
+```c
+for(unsigned k = 0; k<lenth-1; k++){
+    // 构成三角形
+    unsigned temp = (i+1)%(steps);
+    surface.VF.push_back(Tup3u(i*lenth+k, i*lenth+k+1, temp*lenth+k));
+    surface.VF.push_back(Tup3u(i*lenth+k+1, temp*lenth+k+1, temp*lenth+k));
+}
+```
+<div style="overflow: hidden;">
+    <div style="float: left;">
+        <img src="t1.png" height="200" />
+    </div>
+    <div style="float: none;">
+        <img src="t2.png" height="200" />
+    </div>
+</div>
