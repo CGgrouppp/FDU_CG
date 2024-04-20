@@ -1,0 +1,6 @@
+/media/sf_Learn/Computer Graphics/project2/starter2/build/CMakeFiles/a2.dir
+/media/sf_Learn/Computer Graphics/project2/starter2/build/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project2/starter2/build/CMakeFiles/rebuild_cache.dir
+/media/sf_Learn/Computer Graphics/project2/starter2/build/vecmath/CMakeFiles/vecmath.dir
+/media/sf_Learn/Computer Graphics/project2/starter2/build/vecmath/CMakeFiles/edit_cache.dir
+/media/sf_Learn/Computer Graphics/project2/starter2/build/vecmath/CMakeFiles/rebuild_cache.dir

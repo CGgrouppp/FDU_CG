@@ -41,7 +41,7 @@ Renderer::Render()
             Ray r = cam->generateRay(Vector2f(ndcx, ndcy));
 
             Hit h;
-            Vector3f color = traceRay(r, cam->getTMin(), _args.bounces, h);
+            Vector3f color = traceRay(r, cam->getTMin(), _args.bounces, h, 0);
 
             image.setPixel(x, y, color);
             nimage.setPixel(x, y, (h.getNormal() + 1.0f) / 2.0f);
@@ -71,16 +71,31 @@ Vector3f
 Renderer::traceRay(const Ray &r,
     float tmin,
     int bounces,
-    Hit &h) const
+    Hit &h,
+    int depth) const
 {
     // The starter code only implements basic drawing of sphere primitives.
     // You will implement phong shading, recursive ray tracing, and shadow rays.
 
     // TODO: IMPLEMENT 
-    if (_scene.getGroup()->intersect(r, tmin, h)) {
-        return h.getMaterial()->getDiffuseColor();
+    
+    Vector3f phong(0,0,0);
+
+    if (_scene.getGroup()->intersect(r, tmin, h)) {//如果当前光线与物体相交
+        Vector3f p = r.pointAtParameter(h.getT()); //获取击中的坐标；
+        for(int i=0;i<_scene.getNumLights();i++)
+        {
+            Vector3f tolight,intensity;
+            float distToLight;
+            _scene.getLight(i)->getIllumination(p, tolight, intensity, distToLight);
+            //阴影TODO
+            phong += h.getMaterial()->shade(r,h,tolight,intensity);
+        }
+        phong += _scene.getAmbientLight()*h.getMaterial()->getDiffuseColor();
+        //递归todo
+        return phong;
     } else {
-        return Vector3f(0, 0, 0);
+        return  _scene.getBackgroundColor(r.getDirection());
     };
 }
 

@@ -86,6 +86,8 @@ public:
 
 private:
     // TOOD fill in members
+    Vector3f _normal; //平面法线
+    float _d;  //平面相对原点偏移量
 };
 
 
@@ -142,6 +144,7 @@ public:
 
 private:
     Object3D *_object; //un-transformed object  
+    Matrix4f _m;
 };
 
 

@@ -80,15 +80,49 @@ bool Group::intersect(const Ray &r, float tmin, Hit &h) const
 
 Plane::Plane(const Vector3f &normal, float d, Material *m) : Object3D(m) {
     // TODO implement Plane constructor
+    _d = d;
+    _normal = normal;
 }
 bool Plane::intersect(const Ray &r, float tmin, Hit &h) const
 {
     // TODO implement
+    const Vector3f &rayOrigin = r.getOrigin(); //光线起始
+    const Vector3f &dir = r.getDirection();//方向
+    if(std::fabs(Vector3f::dot(_normal,dir))<1e-6)//光线方向与平面平行
+        return false;
+
+    float t;//交点参数
+    t = (_d-Vector3f::dot(rayOrigin,_normal))/Vector3f::dot(_normal,dir);
+    if(t < h.getT() && t > tmin) //在有效范围内（相交），则更新并返回相交
+    { 
+        h.set(t,this->material,_normal.normalized());//更新交点的材料，法向量
+        return true;
+    }
     return false;
 }
+
 bool Triangle::intersect(const Ray &r, float tmin, Hit &h) const 
 {
     // TODO implement
+    const Vector3f &rayOrigin = r.getOrigin(); //光线起始
+    const Vector3f &dir = r.getDirection();//方向
+    Vector3f T_normal = _normals[0].normalized();
+    if(std::fabs(Vector3f::dot(T_normal,dir))<1e-6)
+        return false;
+    
+    float t,u,v;
+    Matrix3f M(-dir, _v[1]-_v[0], _v[2]-_v[0]);
+    Vector3f T = M.inverse()*(rayOrigin-_v[0]);
+    t = T.x();
+    u = T.y();
+    v = T.z();
+    if(t>tmin && t<h.getT() && u>=0.0 && v>=0.0 && u+v<=1.0)
+    {
+        Vector3f P_normal = _normals[0]*(1-u-v)+_normals[1]*u+_normals[2]*v;
+        h.set(t,this->material,P_normal.normalized());
+        return true;
+    }
+
     return false;
 }
 
@@ -96,9 +130,29 @@ bool Triangle::intersect(const Ray &r, float tmin, Hit &h) const
 Transform::Transform(const Matrix4f &m,
     Object3D *obj) : _object(obj) {
     // TODO implement Transform constructor
+    _m = m;
 }
 bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
 {
     // TODO implement
+    const Vector3f &rayOrigin = r.getOrigin(); //光线起始
+    Vector4f rayOrigin_tran,rayEnd_tran;
+    rayOrigin_tran = _m.inverse()*Vector4f(rayOrigin,1);
+    rayEnd_tran = _m.inverse()*Vector4f(r.pointAtParameter(1),1);
+    Vector3f dir_tran = (rayEnd_tran-rayOrigin_tran).xyz();
+    Ray ray_tran(rayOrigin_tran.xyz(),dir_tran);
+    if(_object->intersect(ray_tran,tmin,h))
+    {
+        h.normal = ((_m.inverse()).transposed()*Vector4f(h.normal,1)).xyz().normalized();
+        return true;
+    }
     return false;
+    // Vector4f rayOrigin_tran=_m.inverse()*Vector4f(r.getOrigin(),1),rayEnd_tran=_m.inverse()*Vector4f(r.pointAtParameter(1),1);
+    // Vector3f dirT=(rayEnd_tran-rayOrigin_tran).xyz();
+    // Ray TransRay((_m.inverse()*Vector4f(r.getOrigin(),1)).xyz(),dirT); 
+    // if( _object->intersect(TransRay,tmin,h)){
+    // 	h.normal=((_m.inverse()).transposed()*Vector4f(h.normal,1)).xyz().normalized();
+    // 	return true;
+    // } 
+    // return false;
 }
