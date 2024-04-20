@@ -147,12 +147,4 @@ bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
         return true;
     }
     return false;
-    // Vector4f rayOrigin_tran=_m.inverse()*Vector4f(r.getOrigin(),1),rayEnd_tran=_m.inverse()*Vector4f(r.pointAtParameter(1),1);
-    // Vector3f dirT=(rayEnd_tran-rayOrigin_tran).xyz();
-    // Ray TransRay((_m.inverse()*Vector4f(r.getOrigin(),1)).xyz(),dirT); 
-    // if( _object->intersect(TransRay,tmin,h)){
-    // 	h.normal=((_m.inverse()).transposed()*Vector4f(h.normal,1)).xyz().normalized();
-    // 	return true;
-    // } 
-    // return false;
 }
