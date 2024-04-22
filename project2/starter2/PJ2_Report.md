@@ -202,7 +202,7 @@ bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
 ## 三、
 I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);中1e-4取值尝试，值越小，生成时间越久
 Vector3f L = -r.getDirection().normalized();要加负号
-
+阴影问题07_p (_scene.getGroup()->intersect(r_temp, 1e-4, h_o))中1e-4设置为tmin的，但是在第一轮的时候值好像是0
 ## 五.实验结果
 ### Part1
 <div><img src="part01_ans01.png" height="400"/></div>

@@ -80,19 +80,24 @@ Renderer::traceRay(const Ray &r,
     // TODO: IMPLEMENT 
     
     Vector3f phong(0,0,0);
-
+    // getGroup()物体对象
     if (_scene.getGroup()->intersect(r, tmin, h)) {//如果当前光线与物体相交
         Vector3f p = r.pointAtParameter(h.getT()); //获取击中的坐标；
-        for(int i=0;i<_scene.getNumLights();i++)
+        for(int i=0;i<_scene.getNumLights();i++) // 光源
         {
-            Vector3f tolight,intensity;
+            Vector3f tolight,intensity; //_direction _color
             float distToLight;
             _scene.getLight(i)->getIllumination(p, tolight, intensity, distToLight);
-            //阴影TODO
-            phong += h.getMaterial()->shade(r,h,tolight,intensity);
+            //阴影
+            Ray r_temp(p, tolight);
+            Hit h_o;
+            // 判断是否与物体有交点
+            if(!_args.shadows||!(_scene.getGroup()->intersect(r_temp, 1e-4, h_o))){ 
+                phong += h.getMaterial()->shade(r,h,tolight,intensity);
+            }
         }
         phong += _scene.getAmbientLight()*h.getMaterial()->getDiffuseColor();
-        //递归todo
+        //递归
         Vector3f I_indirect(0,0,0);
         if(depth<bounces){
             // 计算ray的反射光线 R = 2*N(L*N)-L(单位矢量)
@@ -103,7 +108,7 @@ Renderer::traceRay(const Ray &r,
             Hit newh;
             //Camera* cam = _scene.getCamera();
             //I_indirect = traceRay(newray, cam->getTMin(), bounces, newh, depth+1);
-            I_indirect = traceRay(newray, 1e-2, bounces, newh, depth+1);
+            I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);
         }
         phong += h.getMaterial()->getSpecularColor() * I_indirect;
         return phong;
