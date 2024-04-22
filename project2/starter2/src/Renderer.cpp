@@ -97,12 +97,13 @@ Renderer::traceRay(const Ray &r,
         if(depth<bounces){
             // 计算ray的反射光线 R = 2*N(L*N)-L(单位矢量)
             Vector3f N = h.getNormal().normalized();
-            Vector3f L = r.getDirection().normalized();
+            Vector3f L = -r.getDirection().normalized();
             Vector3f Ray_dir = (2 * N * (Vector3f::dot(L, N)) - L).normalized();
             Ray newray(p, Ray_dir);
             Hit newh;
-            Camera* cam = _scene.getCamera();
-            I_indirect = traceRay(newray, cam->getTMin(), bounces, newh, depth+1);
+            //Camera* cam = _scene.getCamera();
+            //I_indirect = traceRay(newray, cam->getTMin(), bounces, newh, depth+1);
+            I_indirect = traceRay(newray, 1e-2, bounces, newh, depth+1);
         }
         phong += h.getMaterial()->getSpecularColor() * I_indirect;
         return phong;

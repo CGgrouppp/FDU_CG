@@ -1,0 +1,6 @@
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/CMakeFiles/a2.dir
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/CMakeFiles/rebuild_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/vecmath/CMakeFiles/vecmath.dir
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/vecmath/CMakeFiles/edit_cache.dir
+/home/why/Desktop/CGlab1/FDU_CG/project2/starter2/build_mac/vecmath/CMakeFiles/rebuild_cache.dir

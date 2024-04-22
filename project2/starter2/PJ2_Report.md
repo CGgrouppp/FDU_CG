@@ -199,7 +199,9 @@ bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
 }
 ```
 
-
+## 三、
+I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);中1e-4取值尝试，值越小，生成时间越久
+Vector3f L = -r.getDirection().normalized();要加负号
 
 ## 五.实验结果
 ### Part1
