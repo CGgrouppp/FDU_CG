@@ -21,6 +21,11 @@ Renderer::Render()
     int w = _args.width;
     int h = _args.height;
 
+    Matrix3f Gaussian_Filter(1.0/16,2.0/16,1.0/16,2.0/16,4.0/16,2.0/16,1.0/16,2.0/16,1.0/16);// 高斯滤波
+    if(_args.filter){ // 上采样
+        w = 3 * w;
+        h = 3 * h;
+    }
     Image image(w, h);
     Image nimage(w, h);
     Image dimage(w, h);
@@ -58,14 +63,11 @@ Renderer::Render()
                     }
                 }
                 color = color/16.0;
-            }else if(_args.filter){
-                
             }else{
                 Ray r = cam->generateRay(Vector2f(ndcx, ndcy)); // 根据像素位置生成光线
                 color = traceRay(r, cam->getTMin(), _args.bounces, h, 0);
             }
             
-
             image.setPixel(x, y, color);
             nimage.setPixel(x, y, (h.getNormal() + 1.0f) / 2.0f);
             float range = (_args.depth_max - _args.depth_min);
@@ -74,18 +76,59 @@ Renderer::Render()
             }
         }
     }
-    // END SOLN
 
-    // save the files 
-    if (_args.output_file.size()) {
-        image.savePNG(_args.output_file);
+    if(_args.filter){
+        int w_f = w/3;
+        int h_f = h/3;
+        Image f_image(w_f, h_f);
+        Image f_nimage(w_f, h_f);
+        Image f_dimage(w_f, h_f);
+        for (int y = 0; y < h_f; ++y) {
+            //float ndcy = 2 * (y / (h_f - 1.0f)) - 1.0f;
+            for (int x = 0; x < w_f; ++x) {
+                //float ndcx = 2 * (x / (w_f - 1.0f)) - 1.0f;
+                //尝试都进行高斯滤波
+                Vector3f color(0,0,0);
+                Vector3f n(0,0,0);
+                Vector3f d(0,0,0);
+                for(int i = 0; i < 3; i++){
+                    for(int j = 0; j < 3; j++){
+                        int temp_x = 3*x + i;
+                        int temp_y = 3*y + j;
+                        color += Gaussian_Filter(i, j)*image.getPixel(temp_x, temp_y);
+                        n += Gaussian_Filter(i, j)*nimage.getPixel(temp_x, temp_y);
+                        d += Gaussian_Filter(i, j)*dimage.getPixel(temp_x, temp_y);
+                    }   
+                }
+                f_image.setPixel(x, y, color);
+                f_nimage.setPixel(x, y, n);
+                f_dimage.setPixel(x, y, d);
+            }
+        }
+        // save the files 
+        if (_args.output_file.size()) {
+            f_image.savePNG(_args.output_file);
+        }
+        if (_args.depth_file.size()) {
+            f_dimage.savePNG(_args.depth_file);
+        }
+        if (_args.normals_file.size()) {
+            f_nimage.savePNG(_args.normals_file);
+        }
+    }else{
+        // save the files 
+        if (_args.output_file.size()) {
+            image.savePNG(_args.output_file);
+        }
+        if (_args.depth_file.size()) {
+            dimage.savePNG(_args.depth_file);
+        }
+        if (_args.normals_file.size()) {
+            nimage.savePNG(_args.normals_file);
+        }
     }
-    if (_args.depth_file.size()) {
-        dimage.savePNG(_args.depth_file);
-    }
-    if (_args.normals_file.size()) {
-        nimage.savePNG(_args.normals_file);
-    }
+
+    
 }
 
 
