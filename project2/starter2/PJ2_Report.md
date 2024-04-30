@@ -203,6 +203,16 @@ bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
 I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);中1e-4取值尝试，值越小，生成时间越久
 Vector3f L = -r.getDirection().normalized();要加负号
 阴影问题07_p (_scene.getGroup()->intersect(r_temp, 1e-4, h_o))中1e-4设置为tmin的，但是在第一轮的时候值好像是0
+
+## 四、
+它的面积与光束在该处截面面积的比值乘以它的亮度即为物体表面对像素亮度贡献。
+一个简化的做法是加密点采样。首先将像素划分为多个子像素，然后按如下两种方法计算像素的颜色。
+（1）从视点向各个子像素的**中心**发出光线，进行光线跟踪，将得到的子像素的颜色(加权)平均，得到平均值作为原像素的颜色。
+（2）从视点向各个子像素的**角点**发出光线进行光线跟踪，将得到的颜色(加权)平均，平均值作为原像素的颜色。
+* jitter问题原因
+Hit newh;
+Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
+
 ## 五.实验结果
 ### Part1
 <div><img src="part01_ans01.png" height="400"/></div>

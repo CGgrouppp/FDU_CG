@@ -32,16 +32,39 @@ Renderer::Render()
     // It also write to the color, normal, and depth images.
     // You should understand what this code does.
     Camera* cam = _scene.getCamera();
+
+    float x_step = 2.0f / (w - 1.0f);
+    float y_step = 2.0f / (h - 1.0f);
+
     for (int y = 0; y < h; ++y) {
         float ndcy = 2 * (y / (h - 1.0f)) - 1.0f;
         for (int x = 0; x < w; ++x) {
             float ndcx = 2 * (x / (w - 1.0f)) - 1.0f;
             // Use PerspectiveCamera to generate a ray.
             // You should understand what generateRay() does.
-            Ray r = cam->generateRay(Vector2f(ndcx, ndcy));
-
+            Vector3f color(0,0,0);
             Hit h;
-            Vector3f color = traceRay(r, cam->getTMin(), _args.bounces, h, 0);
+            if(_args.jitter){
+                for(int p = 0; p<4; p++){
+                    for(int q = 0; q<4; q++){
+                        float random_x = static_cast<double>(rand()) / RAND_MAX; // 生成0到1的随机数
+                        float random_y = static_cast<double>(rand()) / RAND_MAX;
+                        float x_rand = ndcx + (p+random_x)/4.0 * x_step;
+                        float y_rand = ndcy + (q+random_y)/4.0 * y_step;
+                        Ray r = cam->generateRay(Vector2f(x_rand, y_rand));
+                        Hit newh;
+                        Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
+                        color+= color_temp;
+                    }
+                }
+                color = color/16.0;
+            }else if(_args.filter){
+                
+            }else{
+                Ray r = cam->generateRay(Vector2f(ndcx, ndcy)); // 根据像素位置生成光线
+                color = traceRay(r, cam->getTMin(), _args.bounces, h, 0);
+            }
+            
 
             image.setPixel(x, y, color);
             nimage.setPixel(x, y, (h.getNormal() + 1.0f) / 2.0f);
