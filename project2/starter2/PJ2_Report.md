@@ -213,7 +213,13 @@ Vector3f L = -r.getDirection().normalized();要加负号
 Hit newh;
 Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
 
-## 五.实验结果
+## 五. 实验中的问题与解决
+### Part1
+- 第一次的镜面反射上色与实际差距过大，光的亮点位置与样例不同，后续通过检查公式发现是`clamp_s = Vector3f::dot(dirToLight,R.normalized());`中的R没有进行归一处理，导致镜面反射位置和着色有偏差
+- 实验一所得到的结果背景并没有上色，与ppt的结果有偏差，最开始以为是环境光没有加上的原因，后经过理解，发现是因为背景是作为平面进行着色，需要做完第二部分才会有效果。
+### Part2
+- 在进行transform部分时，最初无法渲染出图像，检查发现是由于光线的方向向量通过变换后的起点终点光线坐标相减时，使用起点减去终点，导致光线方向相反，光线都在物体后面，无法显示出图像
+## 六.实验结果
 ### Part1
 <div><img src="part01_ans01.png" height="400"/></div>
 
