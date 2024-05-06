@@ -8,21 +8,21 @@
 环境光在Scene类中定义，可以通过调用`getAmbientLight() `函数获取。并通过公式$I_{ambient}=L_{ambient}*k_{diffuse}$计算光强
 #### ii. 漫反射光（diffuse）
 对于给定光线方向L和面法向量N，若光源在切平面以下，即(L·N<0)时漫反射为0，由公式
-$clamp(\mathbf{L},\mathbf{N}) = \begin{cases} 
+$$clamp(\mathbf{L},\mathbf{N}) = \begin{cases} 
       \mathbf{L}·\mathbf{N} & \text{if } \mathbf{L}·\mathbf{N} < 0 \\
       0 & \text{otherwise } 
-\end{cases}$
+\end{cases}$$
 漫反射光强公式如下：
 $I_{diffuse}=clamp(\mathbf{L}·\mathbf{N} )*L*k_{diffuse}$其中$k_{diffuse}$可以由`_diffuseColor`获得
 #### iii. 镜面反射(specular)
 假设入射光线的入射方向为 \( \mathbf{L} \)，表面的法向量为 \( \mathbf{N} \)，反射光线的方向为 \( \mathbf{R} \)，那么镜面反射的公式可以表示为：
 \[ \mathbf{R} = \mathbf{L} - 2 (\mathbf{L} \cdot \mathbf{N}) \mathbf{N} \]
 镜面反射项的公式为：
-$I_{specular}=clamp(L,R)^s*L*k_{specular}$ 
+$$I_{specular}=clamp(L,R)^s*L*k_{specular}$$
 其中光泽度s可以由`_shininess`得到，反射率k_specular 可以由`Material`类的`_specularColor`定义。
-#### iv.光照强度
+#### iv. 光照强度
 将上面所计算的三个部分光强相加，其中漫反射和镜面反射需要累加所有光源的对应光强度，公式如下：
-$ I=I_{ambient}+\sum_{i \in {lights}}(I_{diffuse,i}+I_{specular,i})$
+$$ I=I_{ambient}+\sum_{i \in {lights}}(I_{diffuse,i}+I_{specular,i})$$
 在shade函数中进行遍历累加并返回累加值即可
 ### 3.代码分析
 #### i. Light.cpp
@@ -31,7 +31,7 @@ $ I=I_{ambient}+\sum_{i \in {lights}}(I_{diffuse,i}+I_{specular,i})$
 (b)intensity：此时的照明强度（RGB）。
 (c)distToLight：场景点与光源之间的距离。
 点光源在距离为d的场景点$x_{surf}$处的光强，通过下面公式计算：
-$L(x_{surf})=\frac{I}{αd^2}$，其中I为光源光强，α为衰减因子，可由`_falloff`得到，d为距离
+$$L(x_{surf})=\frac{I}{αd^2}$$，其中I为光源光强，α为衰减因子，可由`_falloff`得到，d为距离
 ```
     void PointLight::getIllumination(const Vector3f &p, 
                                  Vector3f &tolight, 
@@ -45,6 +45,7 @@ $L(x_{surf})=\frac{I}{αd^2}$，其中I为光源光强，α为衰减因子，可
         intensity = _color/(_falloff*distToLight*distToLight);
     }
 ```
+
 #### ii.Material.cpp
 编写`shade`函数，用于计算漫反射光强和镜面反射光强
 - 对于给定的光照`ray`和击中点`hit`,根据实验原理中的公式，获取击中点的法向量和光线的方向向量参与计算
@@ -71,6 +72,7 @@ Vector3f Material::shade(const Ray &ray,
     return I_diffuse+I_specular;
 }
 ```
+
 #### iii. Renderer.cpp
 实现traceRay函数，用于跟踪光线并计算场景中的光照效果。
 -  函数接收一个光线`r`，光线的最小参数`tmin`，光线的最大反射次数`bounces`，以及一个`Hit`对象`h`和当前的递归深度`depth`。函数返回一个`Vector3f`类型的颜色值。
@@ -105,7 +107,8 @@ Renderer::traceRay(const Ray &r,
     };
 }
 ```
----
+
+
 ## 二.光线投射
 ### 1. 实验要求
 实现Object3D类中的不同子类，并实现`Plane`,`Triangle`,`Transform`中的`intersect()`函数。
@@ -199,19 +202,256 @@ bool Transform::intersect(const Ray &r, float tmin, Hit &h) const
 }
 ```
 
-## 三、
-I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);中1e-4取值尝试，值越小，生成时间越久
-Vector3f L = -r.getDirection().normalized();要加负号
-阴影问题07_p (_scene.getGroup()->intersect(r_temp, 1e-4, h_o))中1e-4设置为tmin的，但是在第一轮的时候值好像是0
+## 三、光线追踪与阴影投射
+### 1.实验要求：
+（1）递归调用traceRay在镜面材料之间进行光线追踪。
+（2）在每次shade()函数调用之前,计算光线与物体表面交点的颜色之前计算投射阴影。
 
-## 四、
-它的面积与光束在该处截面面积的比值乘以它的亮度即为物体表面对像素亮度贡献。
-一个简化的做法是加密点采样。首先将像素划分为多个子像素，然后按如下两种方法计算像素的颜色。
-（1）从视点向各个子像素的**中心**发出光线，进行光线跟踪，将得到的子像素的颜色(加权)平均，得到平均值作为原像素的颜色。
-（2）从视点向各个子像素的**角点**发出光线进行光线跟踪，将得到的颜色(加权)平均，平均值作为原像素的颜色。
-* jitter问题原因
-Hit newh;
-Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
+### 2.实验原理：
+#### i.整体光照明模型
+为增加图形的逼真度，需要考虑物体之间的相互影响，包括漫反射、镜面反射和透射等现象。其中，漫反射表现为颜色在物体表面扩散，可以通过辐射度方法来模拟；镜面反射和透射使得我们可以看到光洁物体表面反射或折射其他物体的影像，这种整体光照明模型很好地模拟了这些现象。这个模型将物体表面朝向视点方向辐射的亮度分为三部分：
+(1) 光源直接照射引起的反射光亮度，记为$I_{l\lambda}$，使用局部光照明模型计算；
+(2) 来自视点方向的镜面反射方向R的其他物体反射或折射来的光亮度，记为 $I_{s\lambda}$；
+(3) 来自视点方向的透射方向T的其他物体反射或折射来的光亮度，记为 $I_{t\lambda}$。
+$$ I_{\lambda} = I_{l\lambda} + K_sC_{s\lambda}I_{s\lambda}
+= K_aC_{d\lambda}I_{a\lambda} + \sum_{i=1}^{m}S_if (d_i)I_{p_i\lambda}[K_dC_{d\lambda}(L_i * N) + K_sC_{s\lambda}(H_t*N)^n] + K_sC_{s\lambda}I_{s\lambda} + K_tC_{t\lambda}I_{t\lambda}
+$$
+
+#### ii. 光线跟踪算法的基本原理
+光线追踪可以分为一下几个步骤：
+（1）光线追踪从观察者出发，沿着每个像素的方向发射一条光线。
+（2）光线与场景中的物体相交，找到离观察者最近的交点。
+（3）确定了光线与物体的交点，计算该点的光照属性。
+（4）光线可能会被物体表面反射、折射或发生散射，从而生成新的光线。在这种情况下，可以通过递归调用光线追踪算法来跟踪这些新的光线。
+（5）最后，通过将每个像素的光线与物体相交的结果合成起来，形成最终的图像。
+自然界中，光线在物体间的反射和折射可以无止境地进行下去，但在算法中要给出递归的终止条件，可以采用以下几种方式：
+（1）光线不与场景中的任何物体相交
+（2）被跟踪的光线达到了给定的层次
+（3）被跟踪光线对像素亮度的贡献小于某个阈值
+书上给出的伪代码如下：
+
+<img src="raytrace.png" height = "400"/>
+
+#### iii. 产生阴影
+加人阴影效果的光照明模型通常会在计算光照时考虑阴影的影响。这样可以使得场景中的物体在光线遮挡的区域内不再受到光源的直接照射，从而呈现出更真实的光影效果。
+典型的光照明模型在计算物体表面上某点的亮度时，会检查该点是否位于光源的阴影之中。如果是，则该点的亮度不再受到光源直接照射。因此，加入阴影效果的光照明模型为：
+$$ I_{\lambda}
+= K_aC_{d\lambda}I_{a\lambda} + \sum_{i=1}^{m}S_if (d_i)I_{p_i\lambda}[K_dC_{d\lambda}(L_i * N) + K_sC_{s\lambda}(H_t*N)^n]
+$$
+其中S_i = 0，如果P处于第i个光源阴影中。
+
+### 3.代码分析
+#### i.光线跟踪
+* 反射光线方向的计算式为$R = 2*N(L*N)-L$，通过`h.getNormal().normalized()`和`-r.getDirection().normalized()`获得法线N和入射光线L，带入计算式中获得反射光线。
+* 得到新的反射光线后调用`traceRay`进行递归计算，并将深度`depth+1`和递归阈值传递给函数，以便控制反射次数。
+
+**代码如下**
+```c++
+Vector3f I_indirect(0,0,0);
+if(depth<bounces){
+    // 计算ray的反射光线 R = 2*N(L*N)-L(单位矢量)
+    Vector3f N = h.getNormal().normalized();
+    Vector3f L = -r.getDirection().normalized();
+    Vector3f Ray_dir = (2 * N * (Vector3f::dot(L, N)) - L).normalized();
+    Ray newray(p, Ray_dir);
+    Hit newh;
+    //Camera* cam = _scene.getCamera();
+    //I_indirect = traceRay(newray, cam->getTMin(), bounces, newh, depth+1);
+    I_indirect = traceRay(newray, 1e-4, bounces, newh, depth+1);
+}
+phong += h.getMaterial()->getSpecularColor() * I_indirect;
+```
+
+**问题与结果比较**
+（1）`I_indirect = traceRay(newray, tmin, bounces, newh, depth+1);`一开始模仿traceRay调用的地方将`tmin`设置为`cam->getTMin()`，渲染结果如下
+<img src="part3_4_pic/06_0.png" height = "200"/>
+
+检查`cam->getTMin()`的值后发现输入是0，可能产生了过度递归调用，于是使用多个值进行尝试：
+<div style="overflow: hidden;">
+    <div style="float: left; width: 33.33%;">
+        <img src="part3_4_pic/06_1e-2.png" height="200"/>
+    </div>
+    <div style="float: left; width: 33.33%;">
+        <img src="part3_4_pic/06_1e-3.png" height="200" />
+    </div>
+    <div style="float: left; width: 33.33%;">
+        <img src="part3_4_pic/06_1e-4.png" height="200" />
+    </div>
+</div>
+
+上图从左到右为`tmin`取1e-2、1e-3、1e-4的渲染表现，很难看出区别，并且值越小，生成时间越久。
+
+#### ii.阴影投射
+* 首先建立了从光源到物体表面某一点的光线，判断这条光线与物体是否有交点。
+* 如果没有遮挡光线的物体，就计算光照，计算得到的颜色值加到`phong`变量上。
+
+**代码如下**
+```c++
+//阴影
+Ray r_temp(p, tolight);
+Hit h_o;
+// 判断是否与物体有交点
+if(!_args.shadows||!(_scene.getGroup()->intersect(r_temp, 1e-4, h_o))){ 
+    phong += h.getMaterial()->shade(r,h,tolight,intensity);
+}
+```
+**问题与结果比较**
+`(_scene.getGroup()->intersect(r_temp, 1e-4, h_o))`
+一开始在`1e-4`位置直接使用了`traceRay`中的参数`tmin`，渲染结果如下：
+<img src="part3_4_pic/07_p1.png" height = "200"/>
+
+在ppt中也提示到“需要将射线原点稍微远离表面交点，例如设置tmin为0.0001，否则射线和起始点相交，使程序始终认为交点在阴影中”，但在第一轮光线追踪的时候`tmin`默认为0，所以产生了错误，这里直接把值定为0.0001，可以输出正确的结果。
+<img src="part3_4_pic/07.png" height = "200"/>
+
+## 四、抗锯齿的问题
+### 1.实验要求
+在Renderer::Render()函数实现抖动采样和上采样高斯滤波。
+
+### 2.实验原理
+#### i. 抖动采样
+抖动采样在每个像素内部按某种方式随机选择多个采样点，进行多次光线追踪，并对追踪到的颜色进行平均，得到该像素的最终颜色，以此减少锯齿状边缘，使图像看起来更加平滑和真实。
+伪代码如下：
+```
+for each pixel (i, j) do 
+    c=0
+    for p = 0 to n − 1 do
+        for q = 0 to n − 1 do
+        c = c + ray-color(i + (p + ξ)/n, j + (q + ξ)/n)
+    c_{ij} = c/n^2
+```
+#### ii. 高斯滤波
+高斯滤波是一种常用的图像处理技术，用于模糊图像或降低图像的噪声。它基于高斯函数来计算图像中每个像素的权重，然后通过对像素及其周围像素的加权平均来实现滤波效果。高斯滤波通常用于平滑图像、去除噪声、边缘检测等图像处理任务中。
+本次作业中是离散的像素而且只考虑相邻的像素，所以把高斯滤波器简化为下面的矩阵：
+$$1/16\begin{bmatrix}
+1 & 2 & 1 \\
+2 & 4 & 2 \\
+1 & 2 & 1 \\
+\end{bmatrix}
+$$
+### 3.代码实现
+#### i. 抖动采样
+根据书上的伪代码，对于每一个像素点，先把像素点分成4*4个小块，每个小块中随机取一点调用`traceRay`函数计算，然后把16个点的平均值作为该像素的采样值。
+**代码如下**
+```c++
+void
+Renderer::Render()
+{
+    int w = _args.width;
+    int h = _args.height;
+    Camera* cam = _scene.getCamera();
+    float x_step = 2.0f / (w - 1.0f);
+    float y_step = 2.0f / (h - 1.0f);
+    for (int y = 0; y < h; ++y) {
+        float ndcy = 2 * (y / (h - 1.0f)) - 1.0f;
+        for (int x = 0; x < w; ++x) {
+            float ndcx = 2 * (x / (w - 1.0f)) - 1.0f;
+            Vector3f color(0,0,0);
+            Hit h;
+            if(_args.jitter){
+                for(int p = 0; p<4; p++){
+                    for(int q = 0; q<4; q++){
+                        float random_x = static_cast<double>(rand()) / RAND_MAX; // 生成0到1的随机数
+                        float random_y = static_cast<double>(rand()) / RAND_MAX;
+                        float x_rand = ndcx + (p+random_x)/4.0 * x_step;
+                        float y_rand = ndcy + (q+random_y)/4.0 * y_step;
+                        Ray r = cam->generateRay(Vector2f(x_rand, y_rand));
+                        Hit newh;
+                        Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
+                        color+= color_temp;
+                    }
+                }
+                color = color/16.0;
+            }else{
+                Ray r = cam->generateRay(Vector2f(ndcx, ndcy)); // 根据像素位置生成光线
+                color = traceRay(r, cam->getTMin(), _args.bounces, h, 0);
+            }
+            
+            image.setPixel(x, y, color);
+            nimage.setPixel(x, y, (h.getNormal() + 1.0f) / 2.0f);
+            float range = (_args.depth_max - _args.depth_min);
+            if (range) {
+                dimage.setPixel(x, y, Vector3f((h.t - _args.depth_min) / range));
+            }
+        }
+    }
+    // save the files 
+    if (_args.output_file.size()) {
+        image.savePNG(_args.output_file);
+    }
+    if (_args.depth_file.size()) {
+        dimage.savePNG(_args.depth_file);
+    }
+    if (_args.normals_file.size()) {
+        nimage.savePNG(_args.normals_file);
+    }   
+}
+```
+#### ii. 高斯滤波
+* 首先进行倍数为3的上采样，在初始化image时将长宽变为原来的3倍。
+* 然后对每个像素点调用`traceRay`函数进行采样。
+* 如果`_args.filter == True`时，使用高斯滤波器进行下采样，每9个像素点为一组，进行加权求和作为中间像素的值，保存在新的image中。
+  
+**代码如下**
+
+(1)上采样
+```c++
+Matrix3f Gaussian_Filter(1.0/16,2.0/16,1.0/16,2.0/16,4.0/16,2.0/16,1.0/16,2.0/16,1.0/16);// 高斯滤波
+if(_args.filter){ // 上采样
+    w = 3 * w;
+    h = 3 * h;
+}
+```
+（2）使用高斯滤波器进行下采样
+```c++
+if(_args.filter){
+    int w_f = w/3;
+    int h_f = h/3;
+    Image f_image(w_f, h_f);
+    Image f_nimage(w_f, h_f);
+    Image f_dimage(w_f, h_f);
+    for (int y = 0; y < h_f; ++y) {
+        //float ndcy = 2 * (y / (h_f - 1.0f)) - 1.0f;
+        for (int x = 0; x < w_f; ++x) {
+            //float ndcx = 2 * (x / (w_f - 1.0f)) - 1.0f;
+            //尝试都进行高斯滤波
+            Vector3f color(0,0,0);
+            Vector3f n(0,0,0);
+            Vector3f d(0,0,0);
+            for(int i = 0; i < 3; i++){
+                for(int j = 0; j < 3; j++){
+                    int temp_x = 3*x + i;
+                    int temp_y = 3*y + j;
+                    color += Gaussian_Filter(i, j)*image.getPixel(temp_x, temp_y);
+                    n += Gaussian_Filter(i, j)*nimage.getPixel(temp_x, temp_y);
+                    d += Gaussian_Filter(i, j)*dimage.getPixel(temp_x, temp_y);
+                }   
+            }
+            f_image.setPixel(x, y, color);
+            f_nimage.setPixel(x, y, n);
+            f_dimage.setPixel(x, y, d);
+        }
+    }
+    // save the files 
+    if (_args.output_file.size()) {
+        f_image.savePNG(_args.output_file);
+    }
+    if (_args.depth_file.size()) {
+        f_dimage.savePNG(_args.depth_file);
+    }
+    if (_args.normals_file.size()) {
+        f_nimage.savePNG(_args.normals_file);
+    }
+}else{
+    //保存原来的image
+}
+```
+
+**问题与结果分析**
+在抖动采样中，`Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);`这步使用了原来的h，每次新的光线相交都会更新`h`的相交信息，导致了部分像素颜色的不正确。
+<img src="part3_4_pic/01_p.png" weight="200"/>
+新建一个Hit对象保存交点，可以得到正确的结果。
+<img src="part3_4_pic/01_2jitter.png" weight="200"/>
+
 
 ## 五. 实验中的问题与解决
 ### Part1
@@ -229,3 +469,23 @@ Vector3f color_temp = traceRay(r, cam->getTMin(), _args.bounces, newh, 0);
 <div><img src="part02_ans03.png" height="400"/></div>
 <div><img src="part02_ans04.png" height="400"/></div>
 <div><img src="part02_ans05.png" height="400"/></div>
+
+### Part3
+<img src="part3_4_pic/06_1e-4.png" height="400"/>
+<img src="part3_4_pic/07.png" height="400"/>
+
+### Part4
+* 没有任何处理抖动采样
+<img src="part3_4_pic/02_n.png" height="400" />
+
+* 抖动采样
+<img src="part3_4_pic/02_j.png" height="400" />
+
+* 高斯滤波
+<img src="part3_4_pic/02_f.png" height="400" />
+
+* 抖动采样+高斯滤波
+<img src="part3_4_pic/02.png" height="400" />
+
+**细节对比**
+<img src="part3_4_pic/compare.png" height="400" />
