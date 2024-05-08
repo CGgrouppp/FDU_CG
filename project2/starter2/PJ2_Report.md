@@ -13,7 +13,7 @@ $$clamp(\mathbf{L},\mathbf{N}) = \begin{cases}
       0 & \text{otherwise } 
 \end{cases}$$
 漫反射光强公式如下：
-$I_{diffuse}=clamp(\mathbf{L}·\mathbf{N} )*L*k_{diffuse}$其中$k_{diffuse}$可以由`_diffuseColor`获得
+$I_{diffuse}=clamp(\mathbf{L}·\mathbf{N} )*L*k_{diffuse}$，其中$k_{diffuse}$可以由`_diffuseColor`获得
 #### iii. 镜面反射(specular)
 假设入射光线的入射方向为 \( \mathbf{L} \)，表面的法向量为 \( \mathbf{N} \)，反射光线的方向为 \( \mathbf{R} \)，那么镜面反射的公式可以表示为：
 \[ \mathbf{R} = \mathbf{L} - 2 (\mathbf{L} \cdot \mathbf{N}) \mathbf{N} \]
@@ -32,25 +32,25 @@ $$ I=I_{ambient}+\sum_{i \in {lights}}(I_{diffuse,i}+I_{specular,i})$$
 (c)distToLight：场景点与光源之间的距离。
 点光源在距离为d的场景点$x_{surf}$处的光强，通过下面公式计算：
 $$L(x_{surf})=\frac{I}{αd^2}$$，其中I为光源光强，α为衰减因子，可由`_falloff`得到，d为距离
-```
-    void PointLight::getIllumination(const Vector3f &p, 
-                                 Vector3f &tolight, 
-                                 Vector3f &intensity, 
-                                 float &distToLight) const
-    {
-        // TODO Implement point light source
-        // tolight, intensity, distToLight are outputs
-        tolight =  (_position - p).normalized();
-        distToLight = (_position - p).abs();
-        intensity = _color/(_falloff*distToLight*distToLight);
-    }
+```c++
+void PointLight::getIllumination(const Vector3f &p, 
+                                Vector3f &tolight, 
+                                Vector3f &intensity, 
+                                float &distToLight) const
+{
+    // TODO Implement point light source
+    // tolight, intensity, distToLight are outputs
+    tolight =  (_position - p).normalized();
+    distToLight = (_position - p).abs();
+    intensity = _color/(_falloff*distToLight*distToLight);
+}
 ```
 
 #### ii.Material.cpp
 编写`shade`函数，用于计算漫反射光强和镜面反射光强
 - 对于给定的光照`ray`和击中点`hit`,根据实验原理中的公式，获取击中点的法向量和光线的方向向量参与计算
 - 分别计算出漫反射和镜面反射的clamp和光强I，并返回二者相加的和（返回一个三维向量分别代表RGB对应参数）
-```
+```c++
 Vector3f Material::shade(const Ray &ray,
     const Hit &hit,
     const Vector3f &dirToLight,
@@ -81,7 +81,7 @@ Vector3f Material::shade(const Ray &ray,
 - 遍历场景中的每一个光源，并通过`_scene.getLight(i)->getIllumination(p, tolight, intensity, distToLight);`获取光源在p点的强度信息，计算漫反射和镜面反射之和并将其叠加到`phong`中。
 - 获取环境光，将其叠加到`phong`中并返回
 - 如果光线没有与场景中的物体相交，则返回背景颜色。
-```
+```c++
 Vector3f
 Renderer::traceRay(const Ray &r,
     float tmin,
@@ -120,7 +120,7 @@ Renderer::traceRay(const Ray &r,
 - 在Plane类中添加_normal和_d,分别代表平面的法向量和相对原点的偏移量，并进行初始化
 - 先判断平面与光线是否相交，通过判断平面的法向量与光线方向向量的点积是否为0，若为0则说明二者垂直，不可能有交点
 - 如果相交则计算光线参数t，并根据t的大小判断是否为最近的交点，如果是，则更新对应的光线参数、材料和法向量并返回true
-```
+```c++
 bool Plane::intersect(const Ray &r, float tmin, Hit &h) const
 {
     const Vector3f &rayOrigin = r.getOrigin(); //光线起始
