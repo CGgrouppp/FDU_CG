@@ -502,3 +502,6 @@ if(_args.filter){
 <img src="part3_4_pic/compare.png" height="400" />
 
 * 其他图像
+<img src="part3_4_pic/01_f.png" height="400" />
+<img src="part3_4_pic/03.png" height="400" />
+<img src="part3_4_pic/04.png" height="400" />
